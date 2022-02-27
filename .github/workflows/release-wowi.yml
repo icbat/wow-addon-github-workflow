@@ -32,7 +32,7 @@ jobs:
       run: mkdir ${{inputs.addon_name}}/
 
     - name: Put everything into a folder called ${{inputs.addon_name}}
-      run: cp -r ${{ inputs.ADDON_BUNDLE_FILES }} ${{ inputs.addon_name }}.toc ${{inputs.addon_name}}/
+      run: cp -r ${{ inputs.addon_bundled_files }} ${{ inputs.addon_name }}.toc ${{inputs.addon_name}}/
 
     - name: Zip it good
       run: zip -9 -r ${{inputs.addon_name}}.zip  ${{inputs.addon_name}}/
@@ -68,7 +68,7 @@ jobs:
     - name: Upload to WoW Interface
       uses: icbat/wow-addon-upload-action@v1.0.3
       with:
-        id: ${{ inputs.WOWI_ID }}
+        id: ${{ inputs.wowi_id }}
         zipFilePath: ${{ inputs.addon_name }}.zip
         compatible: ${{ steps.get_versions.outputs.supported_version_semantic }}
         version: ${{ steps.get_versions.outputs.addon_version }}
