@@ -1,0 +1,75 @@
+name: Release new version of addon to WoW Interface
+
+on:
+  workflow_call:
+    inputs:
+      addon_name:
+        description: 'Must match the name of your TOC file for WoW to load this addon at all'
+        required: true
+        type: string
+      addon_bundled_files:
+        description: 'The list of what you want to ship in your ZIP file, minus the TOC which is required'
+        required: true
+        type: string
+      wowi_id:
+        description: 'The ID number for WoW Interface to be able to upload'
+        required: true
+        type: number
+    secrets:
+      WOWI_API_TOKEN:
+        description: 'Your personal WoW Interface API token as generated here:  https://www.wowinterface.com/downloads/filecpl.php?action=apitokens'
+        required: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout the code
+      uses: actions/checkout@v2
+
+    - name: Create 'dist' folder
+      run: mkdir ${{inputs.addon_name}}/
+
+    - name: Put everything into a folder called ${{inputs.addon_name}}
+      run: cp -r ${{ inputs.ADDON_BUNDLE_FILES }} ${{ inputs.addon_name }}.toc ${{inputs.addon_name}}/
+
+    - name: Zip it good
+      run: zip -9 -r ${{inputs.addon_name}}.zip  ${{inputs.addon_name}}/
+
+    - name: Parse WoW Addon Verions
+      id: get_versions
+      uses: icbat/parse-wow-addon-version@v1.1.0
+      with:
+        tocfile: ${{ inputs.addon_name }}.toc
+
+    - name: Create GH Release
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ steps.get_versions.outputs.addon_version }}
+        release_name: Release ${{ steps.get_versions.outputs.addon_version }}
+        draft: false
+        prerelease: false
+
+    - name: Upload GH Release Asset
+      id: upload-release-asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./${{ inputs.addon_name }}.zip
+        asset_name: ${{ inputs.addon_name }}.zip
+        asset_content_type: application/zip
+
+    - name: Upload to WoW Interface
+      uses: icbat/wow-addon-upload-action@v1.0.3
+      with:
+        id: ${{ inputs.WOWI_ID }}
+        zipFilePath: ${{ inputs.addon_name }}.zip
+        compatible: ${{ steps.get_versions.outputs.supported_version_semantic }}
+        version: ${{ steps.get_versions.outputs.addon_version }}
+        apiKey: ${{ secrets.WOWI_API_TOKEN }}
