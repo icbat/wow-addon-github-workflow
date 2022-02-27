@@ -16,7 +16,7 @@ on:
         required: true
         type: number
     secrets:
-      WOWI_API_TOKEN:
+      wowi_api_token:
         description: 'Your personal WoW Interface API token as generated here:  https://www.wowinterface.com/downloads/filecpl.php?action=apitokens'
         required: true
 
@@ -72,4 +72,4 @@ jobs:
         zipFilePath: ${{ inputs.addon_name }}.zip
         compatible: ${{ steps.get_versions.outputs.supported_version_semantic }}
         version: ${{ steps.get_versions.outputs.addon_version }}
-        apiKey: ${{ secrets.WOWI_API_TOKEN }}
+        apiKey: ${{ secrets.wowi_api_token }}
